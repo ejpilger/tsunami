@@ -8,15 +8,39 @@
 static Agent *agent;
 static socket_channel rcvchan;
 static socket_channel sendchan;
-string gpsip;
-uint16_t gpsport;
-string dbip;
-uint16_t dbport;
-int32_t mmsi;
+static string gpsip;
+static uint16_t gpsport;
+static string dbip;
+static uint16_t dbport;
+static int32_t mmsi;
 
 int main(int argc, char *argv[])
 {
-    int32_t iretn;
+    int32_t iretn = 0;
+    double utcgga = 0.;
+    double utcgst = 0.;
+    double lat;
+    char latc;
+    double lon;
+    char lonc;
+    uint16_t gpsqi;
+    uint16_t svnum;
+    double hdop;
+    double height;
+    char heightu;
+    double geoidsep;
+    char geoidsepc;
+    double age;
+    double refid;
+    uint16_t csum;
+    char tid;
+    double rms;
+    double errormaj;
+    double errormin;
+    double erroratt;
+    double latsig;
+    double lonsig;
+    double heightsig;
 
     // Load configuration file
     ifstream cs(data_name_path(agent->nodeName, "", "") + "config.json");
@@ -70,6 +94,7 @@ int main(int argc, char *argv[])
     }
 
     string message;
+    uint8_t ccsum;
     while (agent->running())
     {
         // Collect next GPS message
@@ -79,7 +104,55 @@ int main(int argc, char *argv[])
             // Valid message received
             if (message.find("GGA") != string::npos)
             {
+                iretn = sscanf(message.c_str(), "$GPGGA,%lf,%lf,%c,%lf,%c,%hu,%hu,%lf,%lf,%c,%lf,%c,%lf,%lf*%hu",
+                               &utcgga,
+                               &lat,
+                               &latc,
+                               &lon,
+                               &lonc,
+                               &gpsqi,
+                               &svnum,
+                               &hdop,
+                               &height,
+                               &heightu,
+                               &geoidsep,
+                               &geoidsepc,
+                               &age,
+                               &refid,
+                               &csum);
+                ccsum = 0;
+                for (uint16_t i=1; i<message.size()-3; ++i)
+                {
+                    ccsum ^= message[i];
+                }
+                if (csum != ccsum)
+                {
+                    utcgga = 0.;
+                }
+            }
 
+            if (message.find("GST") != string::npos)
+            {
+                iretn = sscanf(message.c_str(), "$G%cGST,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf*%hu",
+                               &tid,
+                               &utcgst,
+                               &rms,
+                               &errormaj,
+                               &errormin,
+                               &erroratt,
+                               &latsig,
+                               &lonsig,
+                               &heightsig,
+                               &csum);
+                ccsum = 0;
+                for (uint16_t i=1; i<message.size()-3; ++i)
+                {
+                    ccsum ^= message[i];
+                }
+                if (csum != ccsum)
+                {
+                    utcgst = 0.;
+                }
             }
         }
     }
