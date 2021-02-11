@@ -43,7 +43,8 @@ int main(int argc, char *argv[])
     double heightsig;
 
     // Load configuration file
-    ifstream cs(data_name_path(agent->nodeName, "", "") + "config.json");
+//    ifstream cs(data_name_path(agent->nodeName, "", "") + "config.json");
+    ifstream cs(string(argv[1]) + "/config.json");
     string jstr;
     if (!cs.is_open())
     {
@@ -66,6 +67,7 @@ int main(int argc, char *argv[])
     dbport = jconfig.ObjectContents.at("dbport").nvalue;
     mmsi = jconfig.ObjectContents.at("mmsi").nvalue;
 
+    printf("The gpsip is: %s\nThe gpsport is: %d\nThe dbip is: %s\nThe dbport is: %d\nThe mmsi is: %d\n",gpsip.c_str(), gpsport, dbip.c_str(), dbport, mmsi);
 
     // Start Agent, using MMSI as node name
     agent = new Agent("mmsi"+to_string(mmsi), "tsunami", 15.);
@@ -98,12 +100,12 @@ int main(int argc, char *argv[])
     while (agent->running())
     {
         // Collect next GPS message
-        iretn = socket_recvfrom(rcvchan, message, 100);
+        iretn = socket_recvfrom(rcvchan, message, 200);
         if (iretn > 0)
-        {
+        {printf("valid message received\n%s\n", message.c_str());
             // Valid message received
             if (message.find("GGA") != string::npos)
-            {
+            {printf("GGA Message\n");
                 iretn = sscanf(message.c_str(), "$GPGGA,%lf,%lf,%c,%lf,%c,%hu,%hu,%lf,%lf,%c,%lf,%c,%lf,%lf*%hu",
                                &utcgga,
                                &lat,
@@ -132,7 +134,7 @@ int main(int argc, char *argv[])
             }
 
             if (message.find("GST") != string::npos)
-            {
+            {printf("GST Message\n");
                 iretn = sscanf(message.c_str(), "$G%cGST,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf*%hu",
                                &tid,
                                &utcgst,
