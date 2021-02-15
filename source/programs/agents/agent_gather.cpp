@@ -192,8 +192,8 @@ int main(int argc, char *argv[])
             }
         }
 
-        // Every two minutes, average whatever is in the FIFO
-        if (et.split() > 600.)
+        // Every minute, average whatever is in the FIFO. up to 120 seconds
+        if (et.split() > 60.)
         {
             gpsstruc tempgps;
             if (gpsdata.size())
