@@ -113,6 +113,8 @@ int main(int argc, char *argv[])
     double gstmjd = currentmjd();
     string ggapath;
     double ggamjd = currentmjd();
+    string gpspath;
+    double gpsmjd = currentmjd();
     while (agent->running())
     {
         // Collect next set of GPS messages
@@ -121,62 +123,112 @@ int main(int argc, char *argv[])
         {
             printf("valid message received\n%s\n", message.c_str());
             // Valid message received
-            if (message.find("GGA") != string::npos)
+            //            if (message.find("GGA") != string::npos)
+            //            {
+            //                ggapath = log_write(agent->nodeName, agent->agentName, ggamjd, "", "gga", message);
+            //                printf("GGA Message\n");
+            //                iretn = sscanf(message.c_str(), "$GPGGA,%lf,%lf,%c,%lf,%c,%hu,%hu,%lf,%lf,%c,%lf,%c,%lf,%lf*%hu",
+            //                               &nextgps.utcgga,
+            //                               &nextgps.lat,
+            //                               &nextgps.latc,
+            //                               &nextgps.lon,
+            //                               &nextgps.lonc,
+            //                               &nextgps.gpsqi,
+            //                               &nextgps.svnum,
+            //                               &nextgps.hdop,
+            //                               &nextgps.height,
+            //                               &nextgps.heightu,
+            //                               &nextgps.geoidsep,
+            //                               &nextgps.geoidsepc,
+            //                               &nextgps.age,
+            //                               &nextgps.refid,
+            //                               &nextgps.csum);
+            //                ccsum = 0;
+            //                for (uint16_t i=1; i<message.size()-3; ++i)
+            //                {
+            //                    ccsum ^= message[i];
+            //                }
+            //                if (nextgps.csum != ccsum)
+            //                {
+            //                    nextgps.utcgga = 0.;
+            //                }
+            //            }
+
+            //            if (message.find("GST") != string::npos)
+            //            {
+            //                log_write(agent->nodeName, agent->agentName, gstmjd, "", "gst", message);
+
+            //                printf("GST Message\n");
+            //                iretn = sscanf(message.c_str(), "$G%cGST,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf*%hu",
+            //                               &nextgps.tid,
+            //                               &nextgps.utcgst,
+            //                               &nextgps.rms,
+            //                               &nextgps.errormaj,
+            //                               &nextgps.errormin,
+            //                               &nextgps.erroratt,
+            //                               &nextgps.latsig,
+            //                               &nextgps.lonsig,
+            //                               &nextgps.heightsig,
+            //                               &nextgps.csum);
+            //                ccsum = 0;
+            //                for (uint16_t i=1; i<message.size()-3; ++i)
+            //                {
+            //                    ccsum ^= message[i];
+            //                }
+            //                if (nextgps.csum != ccsum)
+            //                {
+            //                    nextgps.utcgst = 0.;
+            //                }
+            //            }
+
+            message[message.length()-1] = 0;
+            gpspath = log_write(agent->nodeName, agent->agentName, gpsmjd, "", "gps", message);
+            printf("GPS Message\n");
+            iretn = sscanf(&message[message.find("$GPGGA")], "$GPGGA,%lf,%lf,%c,%lf,%c,%hu,%hu,%lf,%lf,%c,%lf,%c,%lf,%lf*%hu",
+                    &nextgps.utcgga,
+                    &nextgps.lat,
+                    &nextgps.latc,
+                    &nextgps.lon,
+                    &nextgps.lonc,
+                    &nextgps.gpsqi,
+                    &nextgps.svnum,
+                    &nextgps.hdop,
+                    &nextgps.height,
+                    &nextgps.heightu,
+                    &nextgps.geoidsep,
+                    &nextgps.geoidsepc,
+                    &nextgps.age,
+                    &nextgps.refid,
+                    &nextgps.csum);
+            ccsum = 0;
+            for (uint16_t i=1; i<message.size()-3; ++i)
             {
-                ggapath = log_write(agent->nodeName, agent->agentName, ggamjd, "", "gga", message);
-                printf("GGA Message\n");
-                iretn = sscanf(message.c_str(), "$GPGGA,%lf,%lf,%c,%lf,%c,%hu,%hu,%lf,%lf,%c,%lf,%c,%lf,%lf*%hu",
-                               &nextgps.utcgga,
-                               &nextgps.lat,
-                               &nextgps.latc,
-                               &nextgps.lon,
-                               &nextgps.lonc,
-                               &nextgps.gpsqi,
-                               &nextgps.svnum,
-                               &nextgps.hdop,
-                               &nextgps.height,
-                               &nextgps.heightu,
-                               &nextgps.geoidsep,
-                               &nextgps.geoidsepc,
-                               &nextgps.age,
-                               &nextgps.refid,
-                               &nextgps.csum);
-                ccsum = 0;
-                for (uint16_t i=1; i<message.size()-3; ++i)
-                {
-                    ccsum ^= message[i];
-                }
-                if (nextgps.csum != ccsum)
-                {
-                    nextgps.utcgga = 0.;
-                }
+                ccsum ^= message[i];
+            }
+            if (nextgps.csum != ccsum)
+            {
+                nextgps.utcgga = 0.;
             }
 
-            if (message.find("GST") != string::npos)
+            iretn = sscanf(&message[message.find("GST")-3], "$G%cGST,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf*%hu",
+                    &nextgps.tid,
+                    &nextgps.utcgst,
+                    &nextgps.rms,
+                    &nextgps.errormaj,
+                    &nextgps.errormin,
+                    &nextgps.erroratt,
+                    &nextgps.latsig,
+                    &nextgps.lonsig,
+                    &nextgps.heightsig,
+                    &nextgps.csum);
+            ccsum = 0;
+            for (uint16_t i=1; i<message.size()-3; ++i)
             {
-                log_write(agent->nodeName, agent->agentName, gstmjd, "", "gst", message);
-
-                printf("GST Message\n");
-                iretn = sscanf(message.c_str(), "$G%cGST,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf*%hu",
-                               &nextgps.tid,
-                               &nextgps.utcgst,
-                               &nextgps.rms,
-                               &nextgps.errormaj,
-                               &nextgps.errormin,
-                               &nextgps.erroratt,
-                               &nextgps.latsig,
-                               &nextgps.lonsig,
-                               &nextgps.heightsig,
-                               &nextgps.csum);
-                ccsum = 0;
-                for (uint16_t i=1; i<message.size()-3; ++i)
-                {
-                    ccsum ^= message[i];
-                }
-                if (nextgps.csum != ccsum)
-                {
-                    nextgps.utcgst = 0.;
-                }
+                ccsum ^= message[i];
+            }
+            if (nextgps.csum != ccsum)
+            {
+                nextgps.utcgst = 0.;
             }
 
             // If we have collected both records then push it to the FIFO
