@@ -184,7 +184,13 @@ int main(int argc, char *argv[])
             message[message.length()-1] = 0;
             gpspath = log_write(agent->nodeName, agent->agentName, gpsmjd, "", "gps", message);
             printf("GPS Message\n");
-            iretn = sscanf(&message[message.find("$GPGGA")], "$GPGGA,%lf,%lf,%c,%lf,%c,%hu,%hu,%lf,%lf,%c,%lf,%c,%lf,%lf*%hu",
+
+        vector<string> messages = string_split(message, "\r\n");
+        for (string mess : messages)
+        {
+            if (mess.find("GPGGA") != string::npos)
+            {
+                iretn = sscanf(&mess[mess.find("$GPGGA")], "$GPGGA,%lf,%lf,%c,%lf,%c,%hu,%hu,%lf,%lf,%c,%lf,%c,%lf,%lf*%hx",
                     &nextgps.utcgga,
                     &nextgps.lat,
                     &nextgps.latc,
@@ -201,35 +207,40 @@ int main(int argc, char *argv[])
                     &nextgps.refid,
                     &nextgps.csum);
             ccsum = 0;
-            for (uint16_t i=1; i<message.size()-3; ++i)
+            for (uint16_t i=1; i<mess.size()-3; ++i)
             {
-                ccsum ^= message[i];
+                ccsum ^= mess[i];
             }
             if (nextgps.csum != ccsum)
             {
                 nextgps.utcgga = 0.;
             }
+        }
 
-            iretn = sscanf(&message[message.find("GST")-3], "$G%cGST,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf*%hu",
-                    &nextgps.tid,
-                    &nextgps.utcgst,
-                    &nextgps.rms,
-                    &nextgps.errormaj,
-                    &nextgps.errormin,
-                    &nextgps.erroratt,
-                    &nextgps.latsig,
-                    &nextgps.lonsig,
-                    &nextgps.heightsig,
-                    &nextgps.csum);
+        if (mess.find("GST") != string::npos)
+        {
+            iretn = sscanf(&mess[mess.find("GST")-3], "$G%cGST,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf*%hx",
+                &nextgps.tid,
+                &nextgps.utcgst,
+                &nextgps.rms,
+                &nextgps.errormaj,
+                &nextgps.errormin,
+                &nextgps.erroratt,
+                &nextgps.latsig,
+                &nextgps.lonsig,
+                &nextgps.heightsig,
+                &nextgps.csum);
             ccsum = 0;
-            for (uint16_t i=1; i<message.size()-3; ++i)
+            for (uint16_t i=1; i<mess.size()-3; ++i)
             {
-                ccsum ^= message[i];
+                ccsum ^= mess[i];
             }
             if (nextgps.csum != ccsum)
             {
                 nextgps.utcgst = 0.;
             }
+        }
+    }
 
             // If we have collected both records then push it to the FIFO
             if (nextgps.utcgga > 0. && nextgps.utcgst > 0.)
@@ -285,8 +296,9 @@ int main(int argc, char *argv[])
             //                data_execute("rsync -auv " + ggapath + " ", result);
             //                data_execute("rsync -auv " + gstpath, result);
             log_move(agent->nodeName, agent->agentName);
-            gstmjd = currentmjd();
-            ggamjd = currentmjd();
+            gpsmjd = currentmjd();
+//            gstmjd = currentmjd();
+//            ggamjd = currentmjd();
             et.reset();
         }
     }
