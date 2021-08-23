@@ -2,6 +2,7 @@
 #include "agent/agentclass.h"
 #include "support/jsonclass.h"
 #include "support/jsonobject.h"
+#include "support/stringlib.h"
 
 
 static Agent *agent;
@@ -80,7 +81,7 @@ int main(int argc, char *argv[])
     printf("The gpsip is: %s\nThe gpsport is: %d\nThe dbip is: %s\nThe dbport is: %d\nThe mmsi is: %d\n",gpsip.c_str(), gpsport, dbip.c_str(), dbport, mmsi);
 
     // Start Agent, using MMSI as node name
-    agent = new Agent("mmsi"+to_string(mmsi), "tsunami", 15.);
+    agent = new Agent("mmsi"+to_unsigned(mmsi, 9, true), "tsunami", 15.);
 
     if ((iretn = agent->wait()) < 0) {
         fprintf(agent->get_debug_fd(), "%16.10f %s Failed to start Agent %s on Node %s Dated %s : %s\n",currentmjd(), mjd2iso8601(currentmjd()).c_str(), agent->getAgent().c_str(), agent->getNode().c_str(), utc2iso8601(data_ctime(argv[0])).c_str(), cosmos_error_string(iretn).c_str());
@@ -291,6 +292,7 @@ int main(int argc, char *argv[])
             jobject.addElement("lonsig", tempgps.lonsig);
             jobject.addElement("heightsig", tempgps.heightsig);
             message = jobject.to_json_string();
+            socket_sendto(sendchan, message);
             log_write(agent->nodeName, agent->agentName, currentmjd(), "", "mean", message);
             //                string result;
             //                data_execute("rsync -auv " + ggapath + " ", result);
