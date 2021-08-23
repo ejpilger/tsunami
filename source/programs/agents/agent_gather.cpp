@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
     int32_t iretn = 0;
     struct gpsstruc
     {
+        double mjd = 0.;
         double utcgga = 0.;
         double utcgst = 0.;
         double lat;
@@ -110,10 +111,10 @@ int main(int argc, char *argv[])
     uint8_t ccsum;
     gpsstruc nextgps;
     ElapsedTime et;
-    string gstpath;
-    double gstmjd = currentmjd();
-    string ggapath;
-    double ggamjd = currentmjd();
+//    string gstpath;
+//    double gstmjd = currentmjd();
+//    string ggapath;
+//    double ggamjd = currentmjd();
     string gpspath;
     double gpsmjd = currentmjd();
     while (agent->running())
@@ -216,6 +217,25 @@ int main(int argc, char *argv[])
             {
                 nextgps.utcgga = 0.;
             }
+            int16_t latd = nextgps.lat / 100.;
+            double latf = (nextgps.lat - latd * 100.) / 60.;
+            nextgps.lat = latd + latf;
+            if (nextgps.latc == 'S')
+            {
+                nextgps.lat = -nextgps.lat;
+            }
+            int16_t lond = nextgps.lon / 100.;
+            double lonf = (nextgps.lon - lond * 100.) / 60.;
+            nextgps.lon = lond + lonf;
+            if (nextgps.lonc == 'W')
+            {
+                nextgps.lon = -nextgps.lon;
+            }
+            int16_t utch = nextgps.utcgga / 10000.;
+            int16_t utcm = (nextgps.utcgga - utch * 10000.) / 100.;
+            double utcf = (nextgps.utcgga - utch * 10000. - utcm * 100.) / 86400.;
+            nextgps.utcgga = utch / 24. + utcm / 1440. + utcf;
+            nextgps.mjd = currentmjd();
         }
 
         if (mess.find("GST") != string::npos)
@@ -240,6 +260,10 @@ int main(int argc, char *argv[])
             {
                 nextgps.utcgst = 0.;
             }
+            int16_t utch = nextgps.utcgst / 10000.;
+            int16_t utcm = (nextgps.utcgst - utch * 10000.) / 100.;
+            double utcf = (nextgps.utcgst - utch * 10000. - utcm * 100.) / 86400.;
+            nextgps.utcgst = utch / 24. + utcm / 1440. + utcf;
         }
     }
 
@@ -272,7 +296,9 @@ int main(int argc, char *argv[])
                     tempgps.heightsig += gps.heightsig * gps.heightsig;
                     tempgps.utcgga += gps.utcgga;
                     tempgps.utcgst += gps.utcgst;
+                    tempgps.mjd += gps.mjd;
                 }
+                tempgps.mjd /= gpsdata.size();
                 tempgps.lat /= gpsdata.size();
                 tempgps.lon /= gpsdata.size();
                 tempgps.height /= gpsdata.size();
@@ -283,6 +309,7 @@ int main(int argc, char *argv[])
                 tempgps.heightsig = sqrt(tempgps.heightsig);
             }
             JSONObject jobject;
+            jobject.addElement("mjd", tempgps.mjd);
             jobject.addElement("utcgga", tempgps.utcgga);
             jobject.addElement("utcgst", tempgps.utcgst);
             jobject.addElement("lat", tempgps.lat);
