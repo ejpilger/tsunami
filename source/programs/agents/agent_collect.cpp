@@ -4,7 +4,7 @@
 static Agent *agent;
 static socket_channel rcvchan;
 static uint16_t dbport = 11111;
-static int32_t mmsi;
+//static int32_t mmsi;
 
 int main(int argc, char *argv[])
 {
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
         iretn = socket_recvfrom(rcvchan, message, 200);
         if (iretn > 0)
         {
-            string cmd = "/bin/mongo tsunami";
+            string cmd = "/usr/bin/mongosh --quiet tsunami";
             FILE *stream = popen(cmd.c_str(), "w");
             fprintf(stream, "db.data.insert(%s)\n", message.c_str());
             fprintf(stream, "exit\n");
