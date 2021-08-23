@@ -22,14 +22,14 @@ int main(int argc, char *argv[])
         double mjd = 0.;
         double utcgga = 0.;
         double utcgst = 0.;
-        double lat;
+        double lat = 0.;
         char latc;
-        double lon;
+        double lon = 0.;
         char lonc;
         uint16_t gpsqi;
         uint16_t svnum;
         double hdop;
-        double height;
+        double height = 0.;
         char heightu;
         double geoidsep;
         char geoidsepc;
@@ -41,9 +41,9 @@ int main(int argc, char *argv[])
         double errormaj;
         double errormin;
         double erroratt;
-        double latsig;
-        double lonsig;
-        double heightsig;
+        double latsig = 0.;
+        double lonsig = 0.;
+        double heightsig = 0.;
     };
 
     deque <gpsstruc> gpsdata;
