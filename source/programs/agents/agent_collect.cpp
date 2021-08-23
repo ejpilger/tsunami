@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
         iretn = socket_recvfrom(rcvchan, message, 200);
         if (iretn > 0)
         {
-            sting cmd = "/bin/mongo tsunami";
+            string cmd = "/bin/mongo tsunami";
             FILE *stream = popen(cmd.c_str(), "w");
             fprintf(stream, "db.data.insert(%s)\n", message.c_str());
             fclose(stream);
