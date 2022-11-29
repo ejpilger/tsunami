@@ -310,6 +310,7 @@ int main(int argc, char *argv[])
                 tempgps.heightsig = sqrt(tempgps.heightsig / gpsdata.size());
             }
             JSONObject jobject;
+            jobject.addElement("mmsi", mmsi)
             jobject.addElement("mjd", tempgps.mjd);
             jobject.addElement("utcgga", tempgps.utcgga);
             jobject.addElement("utcgst", tempgps.utcgst);
